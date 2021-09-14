@@ -7,7 +7,7 @@ app.use(express.json());
 
 const customers = [];
 
-
+console.lot("teste");
 app.post("/account", (req, res) => {
     const { cpf, name } = req.body.cpf;
 
