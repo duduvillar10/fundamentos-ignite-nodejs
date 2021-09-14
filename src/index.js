@@ -1,39 +1,71 @@
+const { request } = require('express');
 const express = require('express');
 const { v4: uuidv4 } = require("uuid")
 
 const app = express();
 
 app.use(express.json());
-console.log("")
+
 const customers = [];
 
-app.post("/account", (req, res) => {
-    const { cpf, name } = req.body.cpf;
+function verifyIfExistsAccountCPF(req, res, next) {
+    const { cpf } = req.headers;
 
+    const customer = customers.find(customers => customers.cpf === cpf);
+
+    if(!customer) {
+        return res.status(400).json({error: "Customer not found!"});
+    }
+
+    req.customer = customer;
+
+    return next();
+}
+
+app.post("/account", (req, res) => {
+    const { cpf, name } = req.body;
+    
     const customersAlreadyExists = customers.some(
         customers => customers.cpf === cpf
     );
 
     if(customersAlreadyExists){
         return res.status(400).json({"error":"Customers already exits!"})
-    }
+    };
 
     customers.push({
         cpf,
         name,
-        id: uuidv4(),
+        id: uuidv4(), 
         statement: []
     });
 
     return res.status(201).send();
 });
 
-app.get("/statement/:cpf", (req, res) => {
-    const { cpf } = req.params;
+//app.use(verifyIfExistsAccountCPF)
 
-    const customer = customers.find(customers => customers.cpf === cpf);
+app.get("/statement", verifyIfExistsAccountCPF, (req, res) => {
+    const { customer } = req;
 
     return res.json(customer.statement);
 });
+
+app.post("/deposit", verifyIfExistsAccountCPF, (req, res) => {
+    const { description, amount } = req.body;
+
+    const { customer } = req;
+
+    const statementOparation = {
+        description,
+        amount,
+        created_at: new Date(),
+        type: "credit"
+    }
+
+    customer.statement.push(statementOparation);
+
+    return res.status(201).send();
+})
 
 app.listen(3333);
