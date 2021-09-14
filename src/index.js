@@ -4,9 +4,9 @@ const { v4: uuidv4 } = require("uuid")
 
 const app = express();
 
-app.use(express.json());
-
 const customers = [];
+
+app.use(express.json());
 
 function verifyIfExistsAccountCPF(req, res, next) {
     const { cpf } = req.headers;
@@ -78,7 +78,7 @@ app.post("/deposit", verifyIfExistsAccountCPF, (req, res) => {
     customer.statement.push(statementOparation);
 
     return res.status(201).send();
-})
+});
 
 app.post("/withdraw", verifyIfExistsAccountCPF, (req, res) => {
     const { amount } = req.body;
@@ -99,7 +99,7 @@ app.post("/withdraw", verifyIfExistsAccountCPF, (req, res) => {
     customer.statement.push(statementOperation);
 
     return res.status(201).send();
-})
+});
 
 app.get("/statement/date", verifyIfExistsAccountCPF, (req, res) => {
     const { customer } = req;
@@ -112,6 +112,30 @@ app.get("/statement/date", verifyIfExistsAccountCPF, (req, res) => {
     return res.json(statement);
 
 
+});
+
+app.put("/account", verifyIfExistsAccountCPF, (req, res) => {
+    const { name } = req.body;
+    const { customer } = req;
+
+    customer.name = name;
+
+    return res.status(201).send();
+    
+});
+
+app.get("/account", verifyIfExistsAccountCPF, (req, res) => {
+    const { customer } = req;
+    
+    return res.json(customer);
+});
+
+app.delete("/account", verifyIfExistsAccountCPF, (req, res) => {
+    const { customer } = req;
+
+    customers.splice(customers.indexOf(customer),1);
+    
+    return res.status(200).json(customers);
 });
 
 app.listen(3333);
